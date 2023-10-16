@@ -7,6 +7,7 @@ import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/
 import Landing from './screens/Landing';
 import Login from './screens/Login';
 import Email from './screens/Email';
+import EmailVerificationAgreement from './screens/EmailVerificationAgreement';
 
 const Stack = createStackNavigator();
 
@@ -29,6 +30,17 @@ function AppStack() {
       <Stack.Screen 
         name="Email"
         component={ Email }
+        options={{
+          gestureEnabled: false,
+          cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS,
+          headerTitle: "",
+          headerBackTitleVisible: false,
+          headerBackImage: () => (<Image style={{ height: 30, width: 30, margin: 5 }} source={require('../StockWatch/assets/return.png')}/>), 
+          headerStyle: {backgroundColor: '#000000', shadowColor: 'transparent'}}}
+      />
+      <Stack.Screen 
+        name="EmailVerificationAgreement"
+        component={ EmailVerificationAgreement }
         options={{
           gestureEnabled: false,
           cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS,

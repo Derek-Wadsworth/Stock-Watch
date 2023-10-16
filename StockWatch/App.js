@@ -61,6 +61,16 @@ function AppStack() {
           headerBackImage: () => (<Image style={{ height: 30, width: 30, margin: 5 }} source={require('../StockWatch/assets/return.png')}/>), 
           headerStyle: {backgroundColor: '#000000', shadowColor: 'transparent'}}}
       />
+      <Stack.Screen
+        name="Password"
+        component={ Password }
+        options={{
+          gestureEnabled: false,
+          headerTitle: "",
+          headerBackTitleVisible: false,
+          headerBackImage: () => (<Image style={{ height: 20, width: 20, margin: 5 }} source={require('../StockWatch/assets/backArrow.png')}/>), 
+          headerStyle: {backgroundColor: '#000000', shadowColor: 'transparent'}}}
+      />
       </Stack.Navigator>
   );
 }

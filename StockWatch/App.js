@@ -1,19 +1,31 @@
 import * as React from 'react';
-import { View, Text } from 'react-native';
+import { Image } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 
 // screen imports
 import Landing from './screens/Landing';
+import Login from './screens/Login';
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 
 // Navigation between screen
 function AppStack() {
   return (
     <Stack.Navigator screenOptions={{ headerMode: 'screen'}}>
       <Stack.Screen name='Landing' component={ Landing } options={{ headerShown: false}}/>
-    </Stack.Navigator>
+      <Stack.Screen 
+        name="Login" 
+        component={ Login } 
+        options={{
+          gestureEnabled: false, 
+          cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS,
+          headerTitle: "",
+          headerBackTitleVisible: false,
+          headerBackImage: () => (<Image style={{ height: 30, width: 30, margin: 5 }} source={require('../StockWatch/assets/return.png')}/>), 
+          headerStyle: {backgroundColor: '#000000', shadowColor: 'transparent'}}}
+      />
+      </Stack.Navigator>
   );
 }
 

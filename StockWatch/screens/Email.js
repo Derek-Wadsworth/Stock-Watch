@@ -5,6 +5,9 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import InputBox from '../components/InputBox';
 import StylableButton from '../components/StylableButton';
 
+// import IP from .env
+import { MY_IP_ADDRESS } from '@env';
+
 const Email = ({ navigation }) => {
     //state for handling visibility of the modal
     const [modalVisible, setModalVisible] = useState(false);
@@ -25,7 +28,7 @@ const Email = ({ navigation }) => {
       try {
 
         // fetch using IPv4 NOTE: PUT THIS VAR IN .env file LATER
-        const response = await fetch(`http://192.168.0.72:3000/signup/email?email=${userEmail}`, {
+        const response = await fetch(`http://${MY_IP_ADDRESS}:3000/signup/email?email=${userEmail}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

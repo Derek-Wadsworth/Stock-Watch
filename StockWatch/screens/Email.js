@@ -9,6 +9,7 @@ import StylableButton from '../components/StylableButton';
 import { MY_IP_ADDRESS } from '@env';
 
 const Email = ({ navigation }) => {
+
     //state for handling visibility of the modal
     const [modalVisible, setModalVisible] = useState(false);
 
@@ -27,7 +28,7 @@ const Email = ({ navigation }) => {
     const handleClick = async () => {
       try {
 
-        // fetch using IPv4 NOTE: PUT THIS VAR IN .env file LATER
+        // fetch using IPv4
         const response = await fetch(`http://${MY_IP_ADDRESS}:3000/signup/email?email=${userEmail}`, {
           method: 'GET',
           headers: {

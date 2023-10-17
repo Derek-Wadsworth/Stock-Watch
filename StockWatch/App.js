@@ -9,6 +9,7 @@ import Login from './screens/Login';
 import Email from './screens/Email';
 import EmailVerificationAgreement from './screens/EmailVerificationAgreement';
 import EmailVerificationEntry from './screens/EmailVerificationEntry';
+import Password from './screens/Password';
 
 const Stack = createStackNavigator();
 

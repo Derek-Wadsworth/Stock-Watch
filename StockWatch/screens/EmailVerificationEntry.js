@@ -20,12 +20,11 @@ const EmailVerificationEntry = ({ route, navigation }) => {
     // handle verifying email and navigating to next signup step if verification successful
     const emailVerificationStatus = async () => {
         try {
-            console.log('We are in the try block');
 
             // create object with query parameters
             const params = new URLSearchParams();
             params.append('email', email);
-            // fetch using IPv4 NOTE: PUT THIS VAR IN .env file LATER
+            // fetch using IPv4
             const response = await fetch(`http://${MY_IP_ADDRESS}:3000/signup/email/verify/user?${params.toString()}`, {
                 method: 'GET',
                 headers: {

@@ -15,7 +15,7 @@ const EmailVerificationAgreement = ({ route, navigation }) => {
     const sendVerificationEmail = async () => {
         try {
             
-            // fetch using IPv4 NOTE: PUT THIS VAR IN .env file LATER
+            // fetch using IPv4
             const response = await fetch(`http://${MY_IP_ADDRESS}:3000/signup/email/verify`, {
                 method: 'POST',
                 headers: {

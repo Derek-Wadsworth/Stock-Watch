@@ -5,6 +5,9 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import InputBox from '../components/InputBox';
 import StylableButton from '../components/StylableButton';
 
+// import IP from .env
+import { MY_IP_ADDRESS } from '@env';
+
 const Password = ({ route, navigation }) => {
     // get param from email screen
     const { email } = route.params;
@@ -22,7 +25,7 @@ const Password = ({ route, navigation }) => {
           console.log('trying to update user\'s password...');
 
           // fetch using IPv4 NOTE
-          const response = await fetch(`http://${ipAdress}:3000/signup/password`, {
+          const response = await fetch(`http://${MY_IP_ADDRESS}:3000/signup/password`, {
               method: 'PATCH',
               headers: {
                   'Content-Type': 'application/json',

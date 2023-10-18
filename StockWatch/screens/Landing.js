@@ -2,7 +2,7 @@ import * as React from 'react';
 import { SafeAreaView, StyleSheet, View, Text, Image, FlatList, useWindowDimensions, Animated } from 'react-native';
 
 // component imports
-import FlatListItem from '../components/FlatListItem';
+import LandingFlatListItem from '../components/LandingFlatListItem';
 import slides from '../data/slides';
 import Footer from '../components/Footer';
 
@@ -15,7 +15,7 @@ const Landing = ({ navigation }) => {
         <SafeAreaView style={[{ width, height }, {backgroundColor: '#000000'}]}>
             <FlatList
             data = {slides}
-            renderItem={({ item }) => <FlatListItem item = {item} width={width}/>}
+            renderItem={({ item }) => <LandingFlatListItem item = {item} width={width}/>}
             horizontal
             showsHorizontalScrollIndicator
             pagingEnabled

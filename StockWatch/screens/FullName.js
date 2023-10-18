@@ -42,7 +42,7 @@ const FullName = ({ route, navigation }) => {
           if (response.status === 200) {
             // name is updated, navigate to next part of signup process
             console.log('Navigating to PhoneNumber screen...');
-            navigation.navigate('PhoneNumber', { email : email });
+            navigation.navigate('PhoneNumber', { email : email, code: '+1' });
           } else if (response.status === 404) {
             // no user found for given email
             console.error('Error', `No user found for given email ${email}`);

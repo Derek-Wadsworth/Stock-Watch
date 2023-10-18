@@ -10,7 +10,9 @@ import Email from './screens/Email';
 import EmailVerificationAgreement from './screens/EmailVerificationAgreement';
 import EmailVerificationEntry from './screens/EmailVerificationEntry';
 import Password from './screens/Password';
+import FullName from './screens/FullName';
 import PhoneNumber from './screens/PhoneNumber';
+import CountryPicker from './screens/CountryPicker';
 
 const Stack = createStackNavigator();
 
@@ -74,8 +76,28 @@ function AppStack() {
           headerStyle: {backgroundColor: '#000000', shadowColor: 'transparent'}}}
       />
       <Stack.Screen
+        name="FullName"
+        component={ FullName }
+        options={{
+          gestureEnabled: false,
+          headerTitle: "",
+          headerBackTitleVisible: false,
+          headerBackImage: () => (<Image style={{ height: 20, width: 20, margin: 5 }} source={require('../StockWatch/assets/backArrow.png')}/>), 
+          headerStyle: {backgroundColor: '#000000', shadowColor: 'transparent'}}}
+      />
+      <Stack.Screen
         name="PhoneNumber"
         component={ PhoneNumber }
+        options={{
+          gestureEnabled: false,
+          headerTitle: "",
+          headerBackTitleVisible: false,
+          headerBackImage: () => (<Image style={{ height: 20, width: 20, margin: 5 }} source={require('../StockWatch/assets/backArrow.png')}/>), 
+          headerStyle: {backgroundColor: '#000000', shadowColor: 'transparent'}}}
+      />
+      <Stack.Screen
+        name="CountryPicker"
+        component={ CountryPicker }
         options={{
           gestureEnabled: false,
           headerTitle: "",

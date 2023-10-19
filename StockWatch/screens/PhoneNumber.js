@@ -14,17 +14,12 @@ const PhoneNumber = ({ route, navigation }) => {
   // get params from FullName screen
   const { email, code } = route.params;
   
-  // state for handling user entered phone number
+  // state for handling user entered phone number and visibility of warning
   const [phoneNumber, setPhoneNumber] = useState('');
-
-  // Regular expression for validating a phone number.
-  const phoneRegex = /^(\+\d{1,2}\s?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}$/;
+  const [showWarning, setShowWarning] = useState(false);
 
   const { width, height } = useWindowDimensions();
   const headerHeight = useHeaderHeight();
-
-  // handle validity of inputted phone number
-  
 
   // handle updating a user in the db with entered phone-number
   const updatePhoneNumber = async () => {
@@ -37,10 +32,12 @@ const PhoneNumber = ({ route, navigation }) => {
           headers: {
               'Content-Type': 'application/json',
           },
-          body: JSON.stringify({email: email, password: userPassword }),
+          body: JSON.stringify({email: email, phoneNumber: phoneNumber }),
       });
-
-      if (response.status === 200) {
+      if (response.status === 400) {
+          // email format is invalid, throw warning
+          setShowWarning(true);
+      } else if (response.status === 200) {
           // password is updated, navigate to next part of signup process
           console.log('Navigating to Landing screen...');
           navigation.navigate('Landing', { email : email });
@@ -73,22 +70,26 @@ const PhoneNumber = ({ route, navigation }) => {
               autoFocus={true}
               keyboardAppearance='dark'
               keyboardType='numeric'
+              onChange={(phoneNumber) => setPhoneNumber(phoneNumber)}
               value={phoneNumber}
-              onChangeText={(phoneNumber) => setPhoneNumber(phoneNumber)}
             />
         </View>
+        {/* conditionally render warning */}
+        {showWarning && ( 
+          <Text style={styles.warning}>Please enter a valid phone number</Text>
+        )}
         <TouchableOpacity
           style={[styles.touchable, { width }]}
           onPress={() => { navigation.navigate('CountryPicker')}}
         >
-              <Text style={styles.touchableText}>Change country code</Text>
-            </TouchableOpacity>
+          <Text style={styles.touchableText}>Change country code</Text>
+        </TouchableOpacity>
       </View>
       <KeyboardAvoidingView style={[styles.footer, {width}]} keyboardVerticalOffset={headerHeight} behavior='padding'> 
         <StylableButton
           text='Continue'
           style={[styles.TOpacity, styles.continueContainer, styles.continueText]}
-          onPress={() => navigation.navigate('Landing')}
+          onPress={updatePhoneNumber}
         />
       </KeyboardAvoidingView>
     </View>
@@ -135,13 +136,19 @@ const styles = StyleSheet.create({
   areaCodeText: {
     fontSize: 16,
     color: 'white',
-    fontWeight: 'bold'
+    fontWeight: '400'
   },
   input: {
     width: '50%',
     height: 50,
+    fontSize: 16,
+    fontWeight: '400',
     borderWidth: 0,
     marginBottom: 0,
+  },
+  warning: {
+    fontSize: 16,
+    color: 'red',
   },
   touchable: {
     alignItems: 'center',

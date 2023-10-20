@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import { TextInput } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
 
-const InputBox = ({placeholder, autoFocus, onChange, onBlur, value, keyboardType, style }) => {
+const InputBox = ({placeholder, autoFocus, onChange, textAlign, onBlur, value, keyboardType, style }) => {
     //state for handling focusing and blurring of TextInput
     const [focus, changeFocus] = useState(false);
 
@@ -11,6 +11,7 @@ const InputBox = ({placeholder, autoFocus, onChange, onBlur, value, keyboardType
         placeholder={placeholder}
         placeholderTextColor={'#7F8487'}
         style={[styles.input, focus? styles.focus : null, style]}
+        textAlign={textAlign}
         autoCorrect={false}
         autoFocus={autoFocus}
         keyboardAppearance='dark'

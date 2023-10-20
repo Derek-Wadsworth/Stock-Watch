@@ -2,13 +2,13 @@ import React, {useState} from 'react';
 import { StyleSheet, View, Text, useWindowDimensions } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 
-const CountryFlatListItem = ({ navigation, item }) => {
+const CountryFlatListItem = ({ navigation, item, email }) => {
 
     const { width } = useWindowDimensions();
 
     // handle changing country code on click of TouchableOpacity
     const changeCountryCode = () => {
-        navigation.navigate('PhoneNumber', { code: item.code });
+        navigation.navigate('PhoneNumber', { email: email, code: item.code });
     }
 
     return(  

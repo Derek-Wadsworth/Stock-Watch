@@ -24,7 +24,7 @@ const PhoneNumber = ({ route, navigation }) => {
   // handle updating a user in the db with entered phone-number
   const updatePhoneNumber = async () => {
     try {
-      console.log('trying to update user\'s password...');
+      console.log('trying to update user\'s phone number...');
 
       // fetch using IPv4 NOTE
       const response = await fetch(`http://${MY_IP_ADDRESS}:3000/signup/phoneNumber`, {
@@ -40,7 +40,7 @@ const PhoneNumber = ({ route, navigation }) => {
       } else if (response.status === 200) {
           // password is updated, navigate to next part of signup process
           console.log('Navigating to Landing screen...');
-          navigation.navigate('Landing', { email : email });
+          navigation.navigate('DateofBirth', { email : email });
       } else if (response.status === 404) {
           // no user found for the given email
           console.error('Error', `No user found for given phone number ${phoneNumber}`);
@@ -80,7 +80,7 @@ const PhoneNumber = ({ route, navigation }) => {
         )}
         <TouchableOpacity
           style={[styles.touchable, { width }]}
-          onPress={() => { navigation.navigate('CountryPicker')}}
+          onPress={() => { navigation.navigate('CountryPicker', { email: email })}}
         >
           <Text style={styles.touchableText}>Change country code</Text>
         </TouchableOpacity>
@@ -148,6 +148,7 @@ const styles = StyleSheet.create({
   },
   warning: {
     fontSize: 16,
+    padding: 5,
     color: 'red',
   },
   touchable: {

@@ -6,13 +6,16 @@ import CountryFlatListItem from '../components/CountryFlatListItem';
 import countries from '../data/countries';
 
 const CountryPicker = ({ route, navigation }) => {
+    // get params from PhoneNumber screen
+    const { email } = route.params;
+
     const { width, height } = useWindowDimensions();
 
     return (
         <View style={[{ width, height }, styles.container]}>
             <FlatList
                 data={countries}
-                renderItem={({ item }) => <CountryFlatListItem item = {item} navigation={navigation}/>}
+                renderItem={({ item }) => <CountryFlatListItem item = {item} navigation={navigation} email = {email}/>}
             />
         </View>
     )

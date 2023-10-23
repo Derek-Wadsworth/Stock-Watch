@@ -148,7 +148,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: 50,
-    fontSize: 16,
     fontWeight: '400',
     borderWidth: 2,
   },

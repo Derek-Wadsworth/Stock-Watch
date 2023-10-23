@@ -14,6 +14,7 @@ import FullName from './screens/FullName';
 import PhoneNumber from './screens/PhoneNumber';
 import CountryPicker from './screens/CountryPicker';
 import DateofBirth from './screens/DateofBirth';
+import Address from './screens/Address';
 
 const Stack = createStackNavigator();
 
@@ -109,6 +110,16 @@ function AppStack() {
        <Stack.Screen
         name="DateofBirth"
         component={ DateofBirth }
+        options={{
+          gestureEnabled: false,
+          headerTitle: "",
+          headerBackTitleVisible: false,
+          headerBackImage: () => (<Image style={{ height: 20, width: 20, margin: 5 }} source={require('../StockWatch/assets/backArrow.png')}/>), 
+          headerStyle: {backgroundColor: '#000000', shadowColor: 'transparent'}}}
+      />
+      <Stack.Screen
+        name="Address"
+        component={ Address }
         options={{
           gestureEnabled: false,
           headerTitle: "",

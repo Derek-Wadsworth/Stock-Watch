@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, useWindowDimensions, StyleSheet, KeyboardAvoidingView, Animated, Easing } from 'react-native';
+import { View, Text, useWindowDimensions, StyleSheet, Keyboard, Animated, Easing } from 'react-native';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 
@@ -17,6 +17,9 @@ const Address = ({ route, navigation }) => {
   const { width, height } = useWindowDimensions();
   const headerHeight = useHeaderHeight();
 
+  // state for updating the height of the keyboard
+  const keyboardHeight = useRef(0);
+
   // state for handling Google autocomplete predictions
   const [query, setQuery] = useState('');
 
@@ -33,14 +36,47 @@ const Address = ({ route, navigation }) => {
     setShowPredictions(query.length >= 3);
   }, [query]);
 
-  const translateY = useRef(new Animated.Value(0.4)).current;
+  const collapseY = useRef(new Animated.Value(0.3)).current;
+  const slideY = useRef(new Animated.Value(0)).current;
 
-  // function for handling collapsing of textContainer
+  // listeners to detect when keyboard is shown or hidden
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardWillShow', (e) => {
+      keyboardHeight.current = e.endCoordinates.height;
+      Animated.timing(slideY, {
+        toValue:  -(keyboardHeight.current),
+        duration: 200,
+        easing: Easing.linear,
+        useNativeDriver: false,
+      }).start(() => {
+        console.log(keyboardHeight.current);
+      });
+    });
+
+    const keyboardDidHideListener = Keyboard.addListener('keyboardWillHide', () => {
+      keyboardHeight.current = 0;
+      Animated.timing(slideY, {
+        toValue: keyboardHeight.current,
+        duration: 200,
+        easing: Easing.ease,
+        useNativeDriver: false,
+      }).start();  
+      console.log(0);
+    });
+
+    // remove listeners when component unmounts
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    }
+  }, []);
+  
+  // handle collapsing of textContainer
   useEffect(() => {
     if (query.length >= 1 && !hasAnimated.current) {
-      Animated.timing(translateY, {
+      Animated.timing(collapseY, {
         toValue: 0,
-        duration: 300,
+        duration: 200,
         easing: Easing.ease,
         useNativeDriver: false,
       }).start(() => {
@@ -50,25 +86,29 @@ const Address = ({ route, navigation }) => {
     }
   }, [query, hasAnimated.current]);
 
-  // function for handling expansion of Footer
-  // useEffect(() => {
-  //   if (query.length >= 1 && !hasAnimated.current) {
-  //     Animated.timing(translateY, {
-  //       toValue: 0.8,
-  //       duration: 200,
-  //       easing: Easing.ease,
-  //       useNativeDriver: false,
-  //     }).start();
-  //   }
-  // }, [query]);
+  const fetchPredictions = async (input) => {
+    const apiKey = PLACES_API_KEY;
+    const endpoint = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${input}&key=${apiKey}`;
+
+    try {
+      const response = await fetch(endpoint);
+      const data = await response.json();
+
+      if (data.status === 'OK') {
+        setPredictions(data.predictions);
+      }
+    } catch (error) {
+      console.error('Error finding predictions', error);
+    }
+  };
 
   return (
     <View style={[styles.container, { width, height } ]}>
       <Animated.View style={[
         styles.textContainer, 
         { width, height }, 
-        { flex: translateY },
-        isVisible ? null : { display: 'none' }
+        { flex: collapseY },
+        isVisible ? null : { display: 'none' },
       ]}>
         <Text style={styles.header}>What is your address</Text>
         <Text style={styles.info}>We are legally required to collect this.</Text>
@@ -86,7 +126,20 @@ const Address = ({ route, navigation }) => {
           value={query}
         />
       </View>
-      <KeyboardAvoidingView style={[styles.footer, {width}]} keyboardVerticalOffset={headerHeight} behavior='padding'>
+      <View style={[
+        styles.footer, {width},
+        { flex: isVisible ? 0.6 : 0.9 },
+        { justifyContent: isVisible ? 'flex-end' : 'flex-start'}
+        ]} 
+      >
+        {/* conditionally render guarantee */}
+        {isVisible && (
+          <Animated.View style={[
+            styles.guaranteeContainer,
+            { transform: [{ translateY: slideY }]}]}>
+            <Text style={styles.guarantee}>We will never share this information with marketers and we will never send you spam.</Text>
+          </Animated.View>
+        )}
         {/* conditionally render predictions */}
         {showPredictions && (
           <View style={styles.predictions}>
@@ -94,7 +147,10 @@ const Address = ({ route, navigation }) => {
               data={sample}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <TouchableOpacity style={styles.queryContainer}>
+                <TouchableOpacity style={[
+                  styles.queryContainer,
+                  {height: (height - (headerHeight + (0.1 * (height - headerHeight)) + keyboardHeight.current))/4},
+                ]}>
                   <Text style={styles.queryTitle}>{item.title}</Text>
                   <Text style={styles.queryDescription}>{item.description}</Text>
                 </TouchableOpacity>
@@ -102,8 +158,7 @@ const Address = ({ route, navigation }) => {
             />     
           </View>
         )} 
-        <Text style={styles.guarantee}>We will never share this information with marketers and we will never send you spam.</Text>
-      </KeyboardAvoidingView>
+      </View>
     </View>
   );
 }
@@ -112,12 +167,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000000',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   textContainer: {
     alignItems: 'center',
     justifyContent: 'flex-start',
-    flex: 0.4,
+    flex: '0.2',
   },
   header: {
     fontSize: 28,
@@ -132,10 +187,13 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   inputContainer: {
-    flex: '0.2',
-    width: '90%',
+    flex: '0.1',
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  footer: {
+    alignItems: 'center'
   },
   input: {
     width: '90%',
@@ -145,23 +203,29 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   predictions: {
-    flex: '1',
-    justifyContent: 'center',
-    alignItems: 'center'
+    flex: 1,
+    width: '90%',
+    alignItems: 'center',
   },
   queryContainer: {
-    height: 50,
+    height: 80,
+    alignItems: 'right',
+    justifyContent: 'space-evenly',
+    borderBottomColor: '#474a4b',
+    borderBottomWidth: 0.17,
   },
   queryTitle: {
+    fontSize: 14,
+    fontWeight: '500',
     color: 'white',
   },
   queryDescription: {
+    fontSize: 13,
     color: '#7F8487'
   },
-  footer: {
-    flex: '0.4',
+  guaranteeContainer: {
+    width: '90%',
     alignItems: 'center',
-    justifyContent: 'flex-end'
   },
   guarantee: {
     width: '90%',

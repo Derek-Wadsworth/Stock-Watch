@@ -6,13 +6,13 @@ import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 // component imports
 import InputBox from '../components/InputBox';
 
-import sample from '../data/sample';
-
 // .env imports
 import { MY_IP_ADDRESS } from '@env';
 import { PLACES_API_KEY } from '@env';
 
 const Address = ({ route, navigation }) => {
+  // get params from DateofBirth screen
+  const { email } = route.params;
 
   const { width, height } = useWindowDimensions();
   const headerHeight = useHeaderHeight();
@@ -20,7 +20,7 @@ const Address = ({ route, navigation }) => {
   // state for updating the height of the keyboard
   const keyboardHeight = useRef(0);
 
-  // state for handling Google autocomplete predictions
+  // state for handling Google autocomplete predictions and updating text in InputBox
   const [query, setQuery] = useState('');
 
   // state for handling whether the animations have run and styling and visibility of textContainer and footer
@@ -29,17 +29,27 @@ const Address = ({ route, navigation }) => {
   // state for handling visibility of textContainer
   const [isVisible, setIsVisible] = useState(true);
 
+  // state for handling Google Places autocomplete predictions
+  const [predictions, setPredictions] = useState([]);
+
   // state for handling visibility of predictions
   const [showPredictions, setShowPredictions] = useState(false);
 
+  // handle calling fetching of autocomplete predictions and visibility of predictions
   useEffect(() => {
+    if (query.length >= 3) {
+      fetchPredictions(query);
+    }
     setShowPredictions(query.length >= 3);
   }, [query]);
 
+  // starting animated value for textContainer flex
   const collapseY = useRef(new Animated.Value(0.3)).current;
+
+  // starting animated value for position of guaranteeContainer
   const slideY = useRef(new Animated.Value(0)).current;
 
-  // listeners to detect when keyboard is shown or hidden
+  // listener to detect when keyboard is shown or hidden
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardWillShow', (e) => {
       keyboardHeight.current = e.endCoordinates.height;
@@ -86,21 +96,58 @@ const Address = ({ route, navigation }) => {
     }
   }, [query, hasAnimated.current]);
 
+  // fetch autocomplete options for flatlist
   const fetchPredictions = async (input) => {
     const apiKey = PLACES_API_KEY;
-    const endpoint = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${input}&key=${apiKey}`;
-
+    const endpoint = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${input}&types=address&key=${apiKey}`;
     try {
       const response = await fetch(endpoint);
       const data = await response.json();
-
       if (data.status === 'OK') {
-        setPredictions(data.predictions);
+        if (data.predictions.length > 5) {
+          const visibleData = data.predictions.slice(0,5);
+          setPredictions(visibleData);
+        } else {
+          setPredictions(data.predictions);
+        }
       }
     } catch (error) {
       console.error('Error finding predictions', error);
     }
   };
+
+  // handle updating a user in the db with entered Address
+  const updateAddress = async (address) => {
+    try {
+      console.log('trying to update user\'s Address...');
+
+      // fetch using IPv4 NOTE
+      const response = await fetch(`http://${MY_IP_ADDRESS}:3000/signup/address`, {
+          method: 'PATCH',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({email: email, address: address }),
+      });
+      if (response.status === 400) {
+          // email format is invalid, throw warning
+          setShowWarning(true);
+      } else if (response.status === 200) {
+          // password is updated, navigate to next part of signup process
+          console.log('Navigating to Landing screen...');
+          navigation.navigate('Landing', { email : email });
+      } else if (response.status === 404) {
+          // no user found for the given email
+          console.error('Error', `No user found for given address ${address}`);
+      } else {
+          // server error
+          console.log('Server error...');
+      }
+    } catch (error) {
+      console.error('Error', error);
+    }
+  };
+  
 
   return (
     <View style={[styles.container, { width, height } ]}>
@@ -144,15 +191,16 @@ const Address = ({ route, navigation }) => {
         {showPredictions && (
           <View style={styles.predictions}>
             <FlatList
-              data={sample}
-              keyExtractor={(item) => item.id}
+              data={predictions}
+              keyExtractor={(item) => item.place_id}
               renderItem={({ item }) => (
                 <TouchableOpacity style={[
                   styles.queryContainer,
-                  {height: (height - (headerHeight + (0.1 * (height - headerHeight)) + keyboardHeight.current))/4},
-                ]}>
-                  <Text style={styles.queryTitle}>{item.title}</Text>
-                  <Text style={styles.queryDescription}>{item.description}</Text>
+                  {height: (height - (headerHeight + (0.1 * (height - headerHeight)) + keyboardHeight.current))/4}]}
+                  onPress={updateAddress(item.structured_formatting.main_text + ' ' + item.structured_formatting.secondary_text)}
+                  >
+                  <Text style={styles.queryTitle}>{item.structured_formatting.main_text}</Text>
+                  <Text style={styles.queryDescription}>{item.structured_formatting.secondary_text}</Text>
                 </TouchableOpacity>
               )}
             />     
@@ -205,10 +253,9 @@ const styles = StyleSheet.create({
   predictions: {
     flex: 1,
     width: '90%',
-    alignItems: 'center',
   },
   queryContainer: {
-    height: 80,
+    width: '100%',
     alignItems: 'right',
     justifyContent: 'space-evenly',
     borderBottomColor: '#474a4b',
@@ -218,10 +265,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: 'white',
+    paddingLeft: 10
   },
   queryDescription: {
     fontSize: 13,
-    color: '#7F8487'
+    color: '#7F8487',
+    paddingLeft: 10
   },
   guaranteeContainer: {
     width: '90%',

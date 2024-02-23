@@ -10,7 +10,11 @@ const Indicator = ({ xPos }) => {
       <View style={ styles.container }>
         {slides.map((_, i) => {
           // range corresponds to [prev dot, current dot, next dot]
-          const inputRange = [(i - i) * width, i * width, (i + 1) * width];
+          const inputRange = [
+            (i - 1) * width,
+            i * width,
+            (i + 1) * width,
+          ];
           const opacity = xPos.interpolate({
             inputRange,
             outputRange: [0.3, 1, 0.3],
@@ -25,22 +29,22 @@ const Indicator = ({ xPos }) => {
         })}
       </View>
     );
+};
+
+const styles = StyleSheet.create({
+  container: {
+      flexDirection: 'row', 
+      justifyContent: 'center',
+      height: '25%'
+  },
+  indicatorDot: {
+      height: 8,
+      width: 8,
+      borderRadius: 5,
+      backgroundColor: '#000000',
+      marginLeft: 8,
+      marginRight: 8,
   }
+});
 
-  styles = StyleSheet.create({
-    container: {
-        flexDirection: 'row', 
-        justifyContent: 'center',
-        height: '25%'
-    },
-    indicatorDot: {
-        height: 10,
-        width: 10,
-        borderRadius: 5,
-        backgroundColor: '#000000',
-        marginLeft: 10,
-        marginRight: 10,
-    }
-  });
-
-  export default Indicator;
+export default Indicator;

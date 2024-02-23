@@ -1,9 +1,9 @@
 export default [
     {
         id: '1',
-        title: 'Get Started',
-        description: 'Grow your business by accepting card payments with the new card reader',
-        image: require('../assets/get_started.png'),
+        title: 'Welcome to StockWatch',
+        description: 'Get access to the tools you need to invest, spend, and put your money in motion.',
+        next: 'Swipe to learn more ->'
     },
     {
         id: '2',

@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, useWindowDimensions, StyleSheet, Keyboard, Animated, Easing } from 'react-native';
+import { View, Text, Modal, useWindowDimensions, StyleSheet, Keyboard, Animated, Easing } from 'react-native';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 
 // component imports
+import StylableButton from '../components/StylableButton';
 import InputBox from '../components/InputBox';
 
 // .env imports
@@ -17,8 +18,14 @@ const Address = ({ route, navigation }) => {
   const { width, height } = useWindowDimensions();
   const headerHeight = useHeaderHeight();
 
+  //state for handling visibility of the modal
+  const [modalVisible, setModalVisible] = useState(false);
+
   // state for updating the height of the keyboard
   const keyboardHeight = useRef(0);
+
+  // variable for storing the height of the keyboard
+  const keyboardHeightOpen = useRef(0);
 
   // state for handling Google autocomplete predictions and updating text in InputBox
   const [query, setQuery] = useState('');
@@ -34,6 +41,10 @@ const Address = ({ route, navigation }) => {
 
   // state for handling visibility of predictions
   const [showPredictions, setShowPredictions] = useState(false);
+
+  // state for handling lat and long of chosen address
+  const lat = useRef(0);
+  const long = useRef(0);
 
   // handle calling fetching of autocomplete predictions and visibility of predictions
   useEffect(() => {
@@ -53,14 +64,13 @@ const Address = ({ route, navigation }) => {
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardWillShow', (e) => {
       keyboardHeight.current = e.endCoordinates.height;
+      keyboardHeightOpen.current = e.endCoordinates.height;
       Animated.timing(slideY, {
         toValue:  -(keyboardHeight.current),
         duration: 200,
         easing: Easing.linear,
         useNativeDriver: false,
-      }).start(() => {
-        console.log(keyboardHeight.current);
-      });
+      }).start();
     });
 
     const keyboardDidHideListener = Keyboard.addListener('keyboardWillHide', () => {
@@ -71,7 +81,6 @@ const Address = ({ route, navigation }) => {
         easing: Easing.ease,
         useNativeDriver: false,
       }).start();  
-      console.log(0);
     });
 
     // remove listeners when component unmounts
@@ -116,41 +125,63 @@ const Address = ({ route, navigation }) => {
     }
   };
 
-  // handle updating a user in the db with entered Address
-  const updateAddress = async (address) => {
+  // handling fetching lat and long of address using Google Geocode API
+  const getLatLong = async (address) => {
+    const apiKey = PLACES_API_KEY;
+    const endpoint = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
     try {
-      console.log('trying to update user\'s Address...');
-
-      // fetch using IPv4 NOTE
-      const response = await fetch(`http://${MY_IP_ADDRESS}:3000/signup/address`, {
-          method: 'PATCH',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({email: email, address: address }),
-      });
-      if (response.status === 400) {
-          // email format is invalid, throw warning
-          setShowWarning(true);
-      } else if (response.status === 200) {
-          // password is updated, navigate to next part of signup process
-          console.log('Navigating to Landing screen...');
-          navigation.navigate('Landing', { email : email });
-      } else if (response.status === 404) {
-          // no user found for the given email
-          console.error('Error', `No user found for given address ${address}`);
-      } else {
-          // server error
-          console.log('Server error...');
-      }
+        const response = await fetch(endpoint);
+        const data = await response.json();
+        if (data.status === 'OK') {
+            lat.current = data.results[0].geometry.location.lat;
+            long.current = data.results[0].geometry.location.lng;
+        }
     } catch (error) {
-      console.error('Error', error);
+        console.error('Error finding predictions', error);
+    }
+};
+
+  // handle validating chosen address
+  const validateAddress = (address, city) => {
+    if (!isNaN(address.charAt(0))) {
+      // first character of address is an address not a street name, so address is valid
+      getLatLong(address + ' ' + city)
+        .then(() => {
+          navigation.navigate('AddressConfirmation', {address: address, city: city, email: email, lat: lat.current, long: long.current});
+        })
+        .catch(error => {
+          console.error('Error fetching location data:', error);
+        });
+    } else {
+      setModalVisible(true);
     }
   };
-  
 
+  // navigate user to AddressCreation screen if Address doesnt exist in predictions
+  const createAddress = () => {
+    navigation.navigate('Landing,', { email: email });
+  };
+  
   return (
     <View style={[styles.container, { width, height } ]}>
+      <Modal
+        animationType='fade'
+        transparent
+        visible={modalVisible}>
+        <View style={[styles.modalBackground, { width, height }]}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalTextContainer}>
+              <Text style={styles.modalTitle}>Error</Text>
+              <Text style={styles.modalInfo}>Please enter a valid address</Text>
+            </View>
+            <StylableButton 
+              text='Ok'
+              style={[{width: '85%'}, styles.continueContainer, styles.continueText]}
+              onPress={() => setModalVisible(false)}
+            />
+          </View>
+        </View>
+      </Modal>
       <Animated.View style={[
         styles.textContainer, 
         { width, height }, 
@@ -196,14 +227,23 @@ const Address = ({ route, navigation }) => {
               renderItem={({ item }) => (
                 <TouchableOpacity style={[
                   styles.queryContainer,
-                  {height: (height - (headerHeight + (0.1 * (height - headerHeight)) + keyboardHeight.current))/4}]}
-                  onPress={updateAddress(item.structured_formatting.main_text + ' ' + item.structured_formatting.secondary_text)}
+                  {height: (height - (headerHeight + (0.1 * (height - headerHeight)) + keyboardHeightOpen.current))/4}]}
+                  onPress={() => validateAddress(item.structured_formatting.main_text, item.structured_formatting.secondary_text)}
                   >
                   <Text style={styles.queryTitle}>{item.structured_formatting.main_text}</Text>
                   <Text style={styles.queryDescription}>{item.structured_formatting.secondary_text}</Text>
                 </TouchableOpacity>
               )}
-            />     
+              ListFooterComponent={() => (
+                <TouchableOpacity style={[
+                  styles.queryContainer,
+                  {height: (height - (headerHeight + (0.1 * (height - headerHeight)) + keyboardHeightOpen.current))/4}]}
+                  onPress={() => createAddress()}
+                  >
+                  <Text style={styles.queryTitle}>I don't see my address here</Text>
+                </TouchableOpacity>  
+              )}
+            />
           </View>
         )} 
       </View>
@@ -216,6 +256,48 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000000',
     alignItems: 'center',
+  },
+  modalBackground: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)'
+  },
+  modalContainer: {
+    width: '90%',
+    height: '20%',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: '#7F8487',
+    backgroundColor: '#3b3b3b'
+  },
+  modalTextContainer: {
+    height: '60%',
+    alignItems: 'center',
+    justifyContent: 'space-evenly'
+  },
+  modalTitle: {
+    color: 'white',
+    fontSize: 22,
+    fontWeight: 'bold'
+  },
+  modalInfo: {
+    color: 'white',
+    fontSize: 16
+  },
+  continueContainer: {
+    borderRadius: 30,
+    paddingVertical: 11,
+    marginBottom: 10,
+    backgroundColor: '#4E9F3D',
+  },
+  continueText: {
+    color: '#000000',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center'
   },
   textContainer: {
     alignItems: 'center',
@@ -283,230 +365,5 @@ const styles = StyleSheet.create({
     padding: 10
    }
 });
-
-// const Address = ({ route, navigation }) => {
-//   // get params from FullName screen
-//   // const { email } = route.params;
-
-//   // state for handling animations
-//   state = {
-//     slide: new Animated.Value(0),
-//     fadeOut: new Animated.Value(1),
-//   };
-
-//   // state for handling Google autocomplete option
-//   const [query, setQuery] = useState('');
-//   const [predictions, setPredictions] = useState([]);
-
-//   // state for handling the visibility of predictions  
-//   const [showPredictions, setShowPredictions] = useState(false);
-
-//   // animation for sliding inputContainer up upon user typing
-//   slideUpInput = () => {
-//     Animated.timing(this.state.slide, {
-//       toValue: -100,
-//       duration: 500,
-//       useNativeDriver: false,
-//     }).start();
-//   };
-
-//   // animation for fading out textContainer upon user typing
-//   fadeOutTitleInfo = () => {
-//     Animated.timing(this.state.fadeOut, {
-//       toValue: 0,
-//       duration: 500,
-//       useNativeDriver: false,
-//     }).start();
-//   }
-
-//   const fetchPredictions = async (input) => {
-//     const apiKey = PLACES_API_KEY;
-//     const endpoint = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${input}&key=${apiKey}`;
-
-//     try {
-//       const response = await fetch(endpoint);
-//       const data = await response.json();
-
-//       if (data.status === 'OK') {
-//         setPredictions(data.predictions);
-//       }
-//     } catch (error) {
-//       console.error('Error finding predictions', error);
-//     }
-//   };
-
-//   useEffect(() => {
-//     if (query.length >= 3) {
-//       setShowPredictions(true);
-//       slideUpInput();
-//       fadeOutTitleInfo();
-//     } else {
-//       setShowPredictions(false);
-//     }
-//   }, [query]);
-  
-//   // state for handling user entered phone number and visibility of warning
-//   const [date, setDate] = useState('');
-
-//   const { width, height } = useWindowDimensions();
-//   const headerHeight = useHeaderHeight();
-
-//   //handle updating a user in the db with entered address
-//   // const updateDateofBirth = async() => {
-//   //   try {
-//   //     console.log('trying to update user\'s date of birth...');
-
-//   //     // fetch using IPv4 NOTE
-//   //     const response = await fetch(`http://${MY_IP_ADDRESS}:3000/signup/dateofBirth`, {
-//   //         method: 'PATCH',
-//   //         headers: {
-//   //             'Content-Type': 'application/json',
-//   //         },
-//   //         body: JSON.stringify({email: email, dateofBirth: date }),
-//   //     });
-//   //     if (response.status === 400) {
-//   //         // email format is invalid, throw warning
-//   //         setShowWarning(true);
-//   //     } else if (response.status === 200) {
-//   //         // password is updated, navigate to next part of signup process
-//   //         console.log('Navigating to Landing screen...');
-//   //         navigation.navigate('Landing', { email : email });
-//   //     } else if (response.status === 404) {
-//   //         // no user found for the given email
-//   //         console.error('Error', `No user found for given phone number ${phoneNumber}`);
-//   //     } else {
-//   //         // server error
-//   //         console.log('Server error...');
-//   //     }
-//   //   } catch (error) {
-//   //     console.error('Error', error);
-//   //   }
-//   // };
-
-//   return (
-//     <View style={[styles.container, { width, height } ]}>
-//       <Animated.View style={[styles.textContainer, {width}]}>
-//         <Text style={styles.header}>What's your date of birth?</Text>
-//         <Text style={styles.info}>We're legally required to collect this information</Text>
-//       </Animated.View>
-//       <Animated.View style={styles.inputContainer}>
-//         <InputBox
-//           placeholder='Enter your address'
-//           placeholderTextColor={'#7F8487'}
-//           style={styles.input}
-//           textAlign='center'
-//           autoCorrect={false}
-//           autoFocus={true}
-//           keyboardAppearance='dark'
-//           keyboardType='numeric'
-//           onChange={(query) => {setQuery(query)}}
-//           value={query}
-//         />
-//         {/* conditionally render predictions */}
-//         {showPredictions && (
-//           <View style={styles.predictions}>
-//             <FlatList
-//               data={sample}
-//               keyExtractor={(item) => item.id}
-//               renderItem={({ item }) => (
-//                 <TouchableOpacity>
-//                   <Text>{item.title}</Text>
-//                   <Text>{item.description}</Text>
-//                 </TouchableOpacity>
-//               )}
-//             />     
-//           </View>
-//         )}
-//       </Animated.View>
-//       <KeyboardAvoidingView style={[styles.footer, {width}]} keyboardVerticalOffset={headerHeight} behavior='padding'> 
-//         <StylableButton
-//           text='Continue'
-//           style={[styles.TOpacity, styles.continueContainer, styles.continueText]}
-//           onPress={updateDateofBirth}
-//         />
-//       </KeyboardAvoidingView>
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#000000',
-//   },
-//   textContainer:{
-//     opacity: this.state.fadeOut,
-//     alignItems: 'center',
-//     justifyContent: 'flex-start',
-//     flex: '0.4',
-//   },
-//   header: {
-//     fontSize: 28,
-//     paddingTop: 15,
-//     color: 'white',
-//   },
-//   info: {
-//     width: '80%',
-//     paddingTop: 15,
-//     fontSize: 16,
-//     textAlign: 'center',
-//     color: 'white',
-//   },
-//   inputContainer: {
-//     translateY: this.state.slide,
-//     flex: '0.2',
-//     backgroundColor: 'red',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-
-//     // width: '90%',
-//     // alignItems: 'center',
-//     // flexDirection: 'row',
-//     // justifyContent: 'center',
-//     // borderRadius: 5,
-//     // borderColor: 'white',
-//     // borderWidth: 2,
-//     // marginBottom: 10,
-//     // backgroundColor: 'red'
-//   },
-//   input: {
-//     width: '90%',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     height: 50,
-//     fontSize: 16,
-//     fontWeight: '400',
-//     borderWidth: 2,
-//   },
-//   predictions: {
-//     flex: '0.2'
-//   },
-//   footer: {
-//     flex: '0.4',
-//     justifyContent: 'flex-end',
-//     alignItems: 'center',
-//   },
-//   TOpacity: {
-//     width: '70%',
-//   },
-//   continueContainer:{
-//     borderRadius: 30,
-//     paddingVertical: 11,
-//     marginBottom: 10,
-//     backgroundColor: '#4E9F3D',
-//   },
-//   continueContainer: {
-//     borderRadius: 30,
-//     paddingVertical: 11,
-//     marginBottom: 10,
-//     backgroundColor: '#4E9F3D'
-//   },
-//   continueText: {
-//     color: '#000000',
-//     fontWeight: 'bold',
-//     fontSize: 16,
-//     textAlign: 'center',
-//   }
-// });
 
 export default Address;

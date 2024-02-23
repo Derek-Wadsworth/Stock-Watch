@@ -15,6 +15,8 @@ import PhoneNumber from './screens/PhoneNumber';
 import CountryPicker from './screens/CountryPicker';
 import DateofBirth from './screens/DateofBirth';
 import Address from './screens/Address';
+import AddressConfirmation from './screens/AddressConfirmation';
+import Home from './screens/Home';
 
 const Stack = createStackNavigator();
 
@@ -127,7 +129,23 @@ function AppStack() {
           headerBackImage: () => (<Image style={{ height: 20, width: 20, margin: 5 }} source={require('../StockWatch/assets/backArrow.png')}/>), 
           headerStyle: {backgroundColor: '#000000', shadowColor: 'transparent'}}}
       />
-      </Stack.Navigator>
+      <Stack.Screen
+        name="AddressConfirmation"
+        component={ AddressConfirmation }
+        options={{
+          gestureEnabled: false,
+          headerTitle: "",
+          headerBackTitleVisible: false,
+          headerBackImage: () => (<Image style={{ height: 20, width: 20, margin: 5 }} source={require('../StockWatch/assets/backArrow.png')}/>), 
+          headerStyle: {backgroundColor: '#000000', shadowColor: 'transparent'}}}
+      />
+      <Stack.Screen
+        name="Home"
+        component={ Home }
+        options={{
+          headerShown: false }}
+      />
+    </Stack.Navigator>
   );
 }
 

@@ -58,7 +58,7 @@ const DateofBirth = ({ route, navigation }) => {
       } else if (response.status === 200) {
           // password is updated, navigate to next part of signup process
           console.log('Navigating to Landing screen...');
-          navigation.navigate('Landing', { email : email });
+          navigation.navigate('Address', { email : email });
       } else if (response.status === 404) {
           // no user found for the given email
           console.error('Error', `No user found for given phone number ${phoneNumber}`);
@@ -132,16 +132,6 @@ const styles = StyleSheet.create({
     flex: '0.2',
     alignItems: 'center',
     justifyContent: 'center',
-
-    // width: '90%',
-    // alignItems: 'center',
-    // flexDirection: 'row',
-    // justifyContent: 'center',
-    // borderRadius: 5,
-    // borderColor: 'white',
-    // borderWidth: 2,
-    // marginBottom: 10,
-    // backgroundColor: 'red'
   },
   input: {
     width: '90%',

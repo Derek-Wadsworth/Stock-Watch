@@ -39,7 +39,7 @@ const PhoneNumber = ({ route, navigation }) => {
           setShowWarning(true);
       } else if (response.status === 200) {
           // password is updated, navigate to next part of signup process
-          console.log('Navigating to Landing screen...');
+          console.log('Navigating to Date of Birth screen...');
           navigation.navigate('DateofBirth', { email : email });
       } else if (response.status === 404) {
           // no user found for the given email
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000000',
   },
-  textContainer:{
+  textContainer: {
     alignItems: 'center',
     justifyContent: 'flex-start',
     flex: '0.4',
@@ -172,12 +172,6 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     marginBottom: 10,
     backgroundColor: '#4E9F3D',
-  },
-  continueContainer: {
-    borderRadius: 30,
-    paddingVertical: 11,
-    marginBottom: 10,
-    backgroundColor: '#4E9F3D'
   },
   continueText: {
     color: '#000000',

@@ -1,12 +1,11 @@
 import * as React from 'react';
-import { StyleSheet, View, Text, Image, useWindowDimensions, Animated } from 'react-native';
+import { View, ScrollView, FlatList, Text, StyleSheet, useWindowDimensions, Animated, Image } from 'react-native';
 import LottieView from 'lottie-react-native';
 
-// component imports
+// component imports 
 import Footer from '../components/Footer';
 
-const Landing = ({ navigation }) => {
-
+const Search = () => {
     const data = ['Item 1', 'Item 2', 'Item 3', 'Item 4'];
 
     const xPos = React.useRef(new Animated.Value(0)).current;
@@ -84,7 +83,6 @@ const Landing = ({ navigation }) => {
                 </Animated.View>
             </Animated.View>
             <Animated.FlatList
-                style={{zIndex: 1, elevation: 1}}
                 data={data}
                 renderItem={({item}) => (
                     <View style={[styles.item, {width: width}]}>
@@ -97,7 +95,7 @@ const Landing = ({ navigation }) => {
                 onScroll={Animated.event([{nativeEvent: {contentOffset: {x: xPos}}}], {useNativeDriver: false})}
             >
             </Animated.FlatList>
-            <Footer  xPos={xPos} navigation={navigation}/>
+            <Footer  xPos={xPos}/>
             <Animated.View style={[styles.slidesContainer, {height: viewHeight}]}>
                 <Animated.View style={{flexDirection: 'row', right: slideRow}}>
                     <View style={{width: width, height: height * 0.3, alignItems: 'center'}}>
@@ -125,7 +123,7 @@ const Landing = ({ navigation }) => {
             </Animated.View>
         </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
     item: {
@@ -145,6 +143,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: 'transparent',
+        zIndex: 2,
     },
     title: {
         fontSize: 40,
@@ -181,4 +180,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export default Landing;
+export default Search;

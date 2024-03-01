@@ -4,28 +4,66 @@ import { useForm, Controller } from "react-hook-form";
 import InputBox from '../components/InputBox';
 import StylableButton from '../components/StylableButton';
 import { useHeaderHeight } from '@react-navigation/elements'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// import IP from .env
+import { MY_IP_ADDRESS } from '@env';
 
 const Login = ({ navigation }) => {
     const { width, height } = useWindowDimensions();
-    const { control, handleSubmit, errors } = useForm({
-      defaultValues: {
-        email: '',
-        password: ''
-      }
-    });
+    const { control, handleSubmit, errors } = useForm();
+
+    //state for handling users inputted email and password
+    const [userEmail, setUserEmail] = useState('');
+    const [userPassword, setUserPassword] = useState('');
 
     //state for handling the visibility of the modal
     const [modalVisible, setModalVisible] = useState(false);
 
+    //state for handling content of the modal
+    const [modalBody, setModalBody] = useState('');
+
     const onSubmit = data => console.log(data);
     const headerHeight = useHeaderHeight();
 
-    //function for handling authentication of users
-    const auth = () => {
-      fetch('localhost:3000/login')
-      .then(() => navigation.navigate('Landing'))
-      .catch(() => setModalVisible(true))
-    }
+    // handle logging in user by matching email and password in database
+    const loginUser = async () => {
+      try {
+
+        // fetch using IPv4
+        const response = await fetch(`http://${MY_IP_ADDRESS}:3000/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email: userEmail.toLowerCase(), password: userPassword }),
+        });
+        // response is not 200
+        if (!response.ok) {
+          // Server error
+          if (response.status === 500) {
+            setModalBody('Server may be experiencing issues');
+            setModalVisible(true);
+          // login credentials are invalid
+          } else {
+            const responseData = await response.json();
+            setModalBody(responseData.message);
+            setModalVisible(true);
+          }
+        // response is 200
+        } else {
+          // login successful, store login token in AsyncStorage
+          const responseData = await response.json();
+          const token = responseData.token;
+          await AsyncStorage.setItem('userToken', token);
+
+          console.log('Navigating to Home screen...');
+          navigation.navigate('Home');
+        }
+      } catch (error) {
+        console.error('Error', error);
+      }
+    };
 
     return (
         <View style={[styles.container, { width }]}>
@@ -37,7 +75,7 @@ const Login = ({ navigation }) => {
               <View style={styles.modalContainer}>
                 <View style={styles.textContainer}>
                   <Text style={styles.title}>Error</Text>
-                  <Text style={styles.body}>Unable to log in with provided credentials</Text>
+                  <Text style={styles.body}>{modalBody}</Text>
                 </View>
                 <StylableButton 
                   text='Ok'
@@ -56,6 +94,8 @@ const Login = ({ navigation }) => {
                 <InputBox 
                   placeholder='Email'
                   autoFocus={true}
+                  onChange={(userEmail) => setUserEmail(userEmail)}
+                  value={userEmail}
                 />
               )}
               name="firstName"
@@ -67,6 +107,8 @@ const Login = ({ navigation }) => {
                 <InputBox 
                   placeholder='Password'
                   autoFocus={false}
+                  onChange={(userPassword) => setUserPassword(userPassword)}
+                  value={userPassword}
                 />
               )}
               name="lastName"
@@ -80,12 +122,12 @@ const Login = ({ navigation }) => {
             <StylableButton 
               text='submit' 
               style={[styles.TOpacity, styles.submitContainer, styles.submitText]} 
-              onPress={()=> setModalVisible(true)}
+              onPress={loginUser}
             />
             <StylableButton 
               text='Need help?' 
               style={[{width: '70%', paddingBottom: 20}, styles.helpContainer, styles.helpText]}
-              onPress={()=> navigation.navigate('Landing')}
+              onPress={()=> setModalVisible(true)}
             />
               </KeyboardAvoidingView>
         </View>

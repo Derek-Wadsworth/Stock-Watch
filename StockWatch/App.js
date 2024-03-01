@@ -143,7 +143,8 @@ function AppStack() {
         name="Home"
         component={ Home }
         options={{
-          headerShown: false }}
+          headerShown: false,
+          gestureEnabled: false}}
       />
     </Stack.Navigator>
   );

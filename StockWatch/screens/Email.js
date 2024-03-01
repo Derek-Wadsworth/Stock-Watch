@@ -29,7 +29,7 @@ const Email = ({ navigation }) => {
       try {
 
         // fetch using IPv4
-        const response = await fetch(`http://${MY_IP_ADDRESS}:3000/signup/email?email=${userEmail}`, {
+        const response = await fetch(`http://${MY_IP_ADDRESS}:3000/signup/email?email=${userEmail.toLowerCase()}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ const Email = ({ navigation }) => {
         // response is 200
         } else {
           console.log('Navigating to Email Verification screen...');
-          navigation.navigate('EmailVerificationAgreement', { email: userEmail });
+          navigation.navigate('EmailVerificationAgreement', { email: userEmail.toLowerCase() });
         }
       } catch (error) {
         console.error('Error', error);

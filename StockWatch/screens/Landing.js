@@ -1,9 +1,11 @@
 import * as React from 'react';
 import { StyleSheet, View, Text, Image, useWindowDimensions, Animated } from 'react-native';
 import LottieView from 'lottie-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // component imports
 import Footer from '../components/Footer';
+
 
 const Landing = ({ navigation }) => {
 
@@ -12,6 +14,21 @@ const Landing = ({ navigation }) => {
     const xPos = React.useRef(new Animated.Value(0)).current;
 
     const { width, height } = useWindowDimensions();
+
+    // look for userToken, if token exists, navigate to the user's Home screen
+    // if token does not exist, remain on Landing page
+    React.useEffect(() => {
+        const tokenCheck = async () => {
+            const userToken = await AsyncStorage.getItem('userToken');
+
+            // token exists, navigate to Home screen
+            if (userToken) {
+                navigation.navigate('Home');
+            }
+        }
+
+        tokenCheck();
+    }, []);
 
     // interpolation for the height of Animted View
     const viewHeight = xPos.interpolate({

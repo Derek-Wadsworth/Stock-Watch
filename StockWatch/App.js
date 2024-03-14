@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 
 // screen imports
+import Loading from './screens/Loading';
 import Landing from './screens/Landing';
 import Login from './screens/Login';
 import Email from './screens/Email';
@@ -23,7 +24,8 @@ const Stack = createStackNavigator();
 // Navigation between screen
 function AppStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerMode: 'screen'}}>
+    <Stack.Navigator initialRouteName='Loading' screenOptions={{ headerMode: 'screen'}}>
+      <Stack.Screen name='Loading' component={ Loading } options={{ headerShown: false}}/>
       <Stack.Screen name='Landing' component={ Landing } options={{ headerShown: false}}/>
       <Stack.Screen 
         name="Login" 
